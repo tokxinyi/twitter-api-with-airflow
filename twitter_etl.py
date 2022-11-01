@@ -4,6 +4,7 @@ import json
 from datetime import datetime
 import s3fs
 import credentials
+import requests
 
 
 
@@ -16,3 +17,16 @@ client = tweepy.Client(
     access_token_secret = credentials.access_secret
 )
 
+# get the user id from username
+username = 'NotionHQ'
+user_info = client.get_user(username=username)
+user_id = user_info.data.id
+
+# get the user's tweets
+tweets = client.get_users_tweets(id=user_id, exclude=['retweets','replies'])
+
+# tweets in dataframe
+df = pd.DataFrame.from_dict(tweets.data)
+
+# output dataframe to csv
+df.to_csv('user_tweets.csv', sep=',')
