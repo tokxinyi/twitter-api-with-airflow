@@ -1,2 +1,3 @@
 credentials.py
 twitter_pipeline_env/
+airflow.cer
