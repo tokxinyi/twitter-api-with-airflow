@@ -3,17 +3,20 @@ from airflow.operators.bash import PythonOperator
 from airflow.decorators import dag, task
 from datetime import datetime
 
-import tweepy
-import credentials
-import pandas as pd
 
 
-@dag(schedule_interval='@daily', start_date = datetime(2022,11,10), catchup=False)
+
+
+
+@dag(schedule_interval='@daily', start_date = datetime(2022,11,10), catchup=False, tags='twitter_api')
 def taskflow():
 
     @task(task_id = 'extract_tweets', retries = 3)
     def extract_data():
-    # connect to Twitter's API v2 using OAuth 1.0a User Context
+        import tweepy
+        import credentials
+        
+        # connect to Twitter's API v2 using OAuth 1.0a User Context
         client = tweepy.Client(
             bearer_token = credentials.bearer_token,
             consumer_key = credentials.consumer_key,
@@ -34,6 +37,8 @@ def taskflow():
 
     @task(task_id = 'process_tweets', retries = 3)
     def process_data(tweets):
+        import pandas as pd
+        
         # tweets in dataframe - process
         df = pd.DataFrame.from_dict(tweets.data)
         return df
@@ -42,3 +47,7 @@ def taskflow():
     def store_data(df):
         # output dataframe to csv - store data
         df.to_csv('user_tweets.csv', sep=',')
+    
+    store_data(process_data(extract_data()))
+
+dag = taskflow()
