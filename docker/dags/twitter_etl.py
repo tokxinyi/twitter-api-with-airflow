@@ -31,4 +31,4 @@ def etl():
 
     # output the dataframe to s3 bucket
     timestamp = datetime.today().strftime('%Y%m%d')
-    df.to_csv(f"s3://user_tweets_{timestamp}.csv")
+    df.to_csv(f"s3://twitter-api-airflow/user_tweets_{timestamp}.csv")
