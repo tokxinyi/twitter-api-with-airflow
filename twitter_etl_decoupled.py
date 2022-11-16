@@ -1,11 +1,10 @@
 import tweepy
 import pandas as pd
-import s3fs
 import credentials
 from datetime import datetime
 
 
-def etl():
+def extract_data():
     # connect to Twitter's API v2 using OAuth 1.0a User Context
     client = tweepy.Client(
         bearer_token = credentials.bearer_token,
@@ -23,12 +22,15 @@ def etl():
     # get the user's tweets
     tweets = client.get_users_tweets(id=user_id, exclude=['retweets','replies'])
 
-    # transform to a dataframe
+    return tweets
+
+def process_data(tweets):
+    # tweets in dataframe - process
     df = pd.DataFrame.from_dict(tweets.data)
+    return df
 
-    # instantiate s3 object
-    s3 = s3fs.S3FileSystem()
-
-    # output the dataframe to s3 bucket
+def store_data(df):
+    # output dataframe to csv - store data
     timestamp = datetime.today().strftime('%Y%m%d')
-    df.to_csv(f"s3://twitter-api-airflow/user_tweets_{timestamp}.csv")
+    s3_bucket = 'twitter-api-airflow'
+    df.to_csv(f"s3://{s3_bucket}/user_tweets_{timestamp}.csv")

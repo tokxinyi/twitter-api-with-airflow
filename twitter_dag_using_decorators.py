@@ -1,11 +1,7 @@
 from airflow import DAG
-from airflow.operators.bash import PythonOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.decorators import dag, task
 from datetime import datetime
-
-
-
-
 
 
 @dag(schedule_interval='@daily', start_date = datetime(2022,11,10), catchup=False, tags='twitter_api')
