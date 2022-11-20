@@ -4,13 +4,14 @@ from airflow.decorators import dag, task
 from datetime import datetime
 
 
-@dag(schedule_interval='@daily', start_date = datetime(2022,11,10), catchup=False, tags='twitter_api')
+@dag(schedule_interval='@daily', start_date = datetime(2022,11,10), catchup=False, tags=['twitter_api'])
 def taskflow():
 
     @task(task_id = 'extract_tweets', retries = 3)
     def extract_data():
         import tweepy
         import credentials
+        import pandas as pd
         
         # connect to Twitter's API v2 using OAuth 1.0a User Context
         client = tweepy.Client(
@@ -29,21 +30,13 @@ def taskflow():
         # get the user's tweets
         tweets = client.get_users_tweets(id=user_id, exclude=['retweets','replies'])
 
-        return tweets
-
-    @task(task_id = 'process_tweets', retries = 3)
-    def process_data(tweets):
-        import pandas as pd
-        
-        # tweets in dataframe - process
         df = pd.DataFrame.from_dict(tweets.data)
-        return df
 
-    @task(task_id = 'store_tweets', retries = 3)
-    def store_data(df):
-        # output dataframe to csv - store data
-        df.to_csv('user_tweets.csv', sep=',')
+        timestamp = datetime.today().strftime('%Y%m%d')
+        s3_bucket = 'twitter-api-airflow'
+        df.to_csv(f"s3://{s3_bucket}/user_tweets_{timestamp}.csv")
+
     
-    store_data(process_data(extract_data()))
+    extract_data()
 
 dag = taskflow()
